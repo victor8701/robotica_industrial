@@ -7,6 +7,37 @@ import json
 
 BASE_DIR = Path(__file__).parent
 CONFIG_FILE = BASE_DIR / "config_cubos_amarillos.json"
+HOMOGRAPHY_FILE = BASE_DIR / "homography.json"
+
+
+# ─────────────────────────────────────────────
+#  FUNCIONES DE HOMOGRAFÍA (píxel → mm robot)
+# ─────────────────────────────────────────────
+
+def cargar_homografia(ruta):
+    """Lee homography.json generado por calibrar_homografia.py.
+    Devuelve la matriz H (3×3, float64), o None si el fichero no existe."""
+    if not Path(ruta).is_file():
+        return None
+    with open(ruta, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return np.array(data["H"], dtype=np.float64)
+
+
+def pixel_a_mm(px, py, H):
+    """Aplica la homografía H para convertir (px, py) en píxeles
+    a (x_mm, y_mm) en el frame del robot (Workobject_1)."""
+    pt = np.array([[[px, py]]], dtype=np.float32)
+    resultado = cv2.perspectiveTransform(pt, H)[0][0]
+    return float(resultado[0]), float(resultado[1])
+
+
+def formatear_coordenadas(x_mm, y_mm):
+    """Convierte (x_mm, y_mm) a string de 6 chars 'XXXYYYY' compatible con RAPID.
+    Redondea a entero y hace clamp al rango [0, 999]."""
+    x = max(0, min(999, int(round(x_mm))))
+    y = max(0, min(999, int(round(y_mm))))
+    return f"{x:03d}{y:03d}"
 
 # ─────────────────────────────────────────────
 #  VARIABLE GLOBAL DE MODO DE CAPTURA
@@ -32,6 +63,14 @@ else:
     mi_socket = None
     print("[OFFLINE] Sin conexión al robot.")
 
+# Cargar homografía de calibración
+H_global = cargar_homografia(HOMOGRAPHY_FILE)
+if H_global is not None:
+    print("[CALIB] Homografía cargada correctamente.")
+else:
+    print("[AVISO] homography.json no encontrado. Ejecuta calibrar_homografia.py.")
+    print("        Las coordenadas enviadas al robot serán en píxeles (incorrecto).")
+
 
 def dibujar(mask, color, min_area=3000):
     contornos, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -46,20 +85,19 @@ def dibujar(mask, color, min_area=3000):
             y = int(M['m01'] / M['m00'])
             nuevoContorno = cv2.convexHull(c)
             cv2.circle(frame, (x, y), 7, color, -1)
-            cv2.putText(frame, '{},{}'.format(x, y), (x + 10, y), font, 0.75,
-                        color, 1, cv2.LINE_AA)
             cv2.drawContours(frame, [nuevoContorno], 0, color, 3)
-            coorX = ''
-            coorY = ''
-            if x < 100:
-                coorX = '0' + str(x)
+
+            if H_global is not None:
+                x_mm, y_mm = pixel_a_mm(x, y, H_global)
+                coordXY = formatear_coordenadas(x_mm, y_mm)
+                label = f'{x},{y}px -> {x_mm:.0f},{y_mm:.0f}mm'
             else:
-                coorX = str(x)
-            if y < 100:
-                coorY = '0' + str(y)
-            else:
-                coorY = str(y)
-            coordXY = coorX + coorY
+                coordXY = f"{x:03d}{y:03d}"
+                label = f'{x},{y}px (sin calib)'
+
+            cv2.putText(frame, label, (x + 10, y), font, 0.65,
+                        color, 1, cv2.LINE_AA)
+
             if mi_socket:
                 mi_socket.sendall(coordXY.encode())
                 time.sleep(1)
@@ -69,7 +107,7 @@ def dibujar(mask, color, min_area=3000):
 # ─────────────────────────────────────────────
 #  Inicialización de la fuente de imagen
 # ─────────────────────────────────────────────
-IMAGEN_ESTATICA = "images/escenario1.jpg"
+IMAGEN_ESTATICA = BASE_DIR / "images" / "escenario1.jpg"
 
 if USAR_CAMARA:
     cap = cv2.VideoCapture(1)
@@ -78,7 +116,7 @@ if USAR_CAMARA:
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 else:
     # Carga la imagen una sola vez
-    img_estatica = cv2.imread(IMAGEN_ESTATICA)
+    img_estatica = cv2.imread(str(IMAGEN_ESTATICA))
     if img_estatica is None:
         raise FileNotFoundError(
             f"No se encontró la imagen: {IMAGEN_ESTATICA}")
