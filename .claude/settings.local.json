@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git -C \"c:/Users/Viktor/source/repos/rob_industrial\" mv \"lab3_pick_place_VC/client-tcpip-gofa/ClienteGoFa.py\" \"lab3_pick_place_VC/client-tcpip-gofa/ClienteGoFa_original.py\")"
-    ]
-  }
-}
