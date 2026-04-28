@@ -23,7 +23,7 @@ MODULE VisionPickPlace
     VAR num cambioStrY;
     VAR string XValorString;
     VAR string YValorString;    
-    VAR string client_ip := "127.0.0.1"; !Set the IP of the WAN port of the real robot 192.168,0.91
+    VAR string client_ip := "192.168.125.1"; !Set the IP of the WAN port of the real robot 192.168,0.91
     !Process' variables
     CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     CONST robtarget ptoPick:=[[190.152964329,689.995892332,56.318084196],[-0.00000001,0.000000013,1,-0.000000005],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
@@ -83,16 +83,16 @@ MODULE VisionPickPlace
     PROC recogerPieza()
         ConfJ\Off;
         ConfL\Off;
-        MoveJ ptoReposo,v1000,z100,Servo\WObj:=wobj0;
-        MoveJ Offs(ptoPick,0,0,100),v800,z10,Servo\WObj:=wobj0;
-        MoveL ptoPick,v100,fine,Servo\WObj:=wobj0;
+        MoveJ ptoReposo,v1000,z100,Magnet\WObj:=wobj0;
+        MoveJ Offs(ptoPick,0,0,100),v800,z10,Magnet\WObj:=wobj0;
+        MoveL ptoPick,v100,fine,Magnet\WObj:=wobj0;
         Set Local_IO_0_DO1;
-        MoveJ Offs(ptoPick,0,0,50),v400,z10,Servo\WObj:=wobj0;
-        MoveJ ptoReposo,v800,z100,Servo\WObj:=wobj0;
-        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Servo\WObj:=Workobject_1;
-        MoveL ptoCamara,v100,fine,Servo\WObj:=Workobject_1;
+        MoveJ Offs(ptoPick,0,0,50),v400,z10,Magnet\WObj:=wobj0;
+        MoveJ ptoReposo,v800,z100,Magnet\WObj:=wobj0;
+        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Magnet\WObj:=cube_storage;
+        MoveL ptoCamara,v100,fine,Magnet\WObj:=cube_storage;
         Reset Local_IO_0_DO1;
-        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Servo\WObj:=Workobject_1;
+        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Magnet\WObj:=cube_storage;
     ENDPROC
     
 ENDMODULE
