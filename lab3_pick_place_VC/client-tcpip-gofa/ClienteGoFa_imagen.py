@@ -39,14 +39,6 @@ def formatear_coordenadas(x_mm, y_mm):
     y = max(0, min(999, int(round(y_mm))))
     return f"{x:03d}{y:03d}"
 
-# ─────────────────────────────────────────────
-#  ORIGEN DE cube_storage EN COORDENADAS GLOBALES (wobj0)
-#  La homografía produce coordenadas en wobj0. Hay que restar este offset
-#  para obtener coordenadas en cube_storage, que es lo que usa RAPID.
-# ─────────────────────────────────────────────
-WOBJ1_X = -705.0   # mm
-WOBJ1_Y =   35.0   # mm
-
 # variable camara ordenador (1) o externa (0)
 camara = 0
 
@@ -100,11 +92,9 @@ def dibujar(mask, color, min_area=3000):
             cv2.drawContours(frame, [nuevoContorno], 0, color, 3)
 
             if H_global is not None:
-                x_global, y_global = pixel_a_mm(x, y, H_global)
-                x_mm = x_global - WOBJ1_X
-                y_mm = y_global - WOBJ1_Y
+                x_mm, y_mm = pixel_a_mm(x, y, H_global)
                 coordXY = formatear_coordenadas(x_mm, y_mm)
-                label = f'{x},{y}px -> {x_mm:.0f},{y_mm:.0f}mm (cube_storage)'
+                label = f'{x},{y}px -> {x_mm:.0f},{y_mm:.0f}mm (wobj0)'
             else:
                 coordXY = f"{x:03d}{y:03d}"
                 label = f'{x},{y}px (sin calib)'
