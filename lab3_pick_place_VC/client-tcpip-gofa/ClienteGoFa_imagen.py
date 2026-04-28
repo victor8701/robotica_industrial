@@ -40,22 +40,34 @@ def formatear_coordenadas(x_mm, y_mm):
     return f"{x:03d}{y:03d}"
 
 # ─────────────────────────────────────────────
+#  ORIGEN DE cube_storage EN COORDENADAS GLOBALES (wobj0)
+#  La homografía produce coordenadas en wobj0. Hay que restar este offset
+#  para obtener coordenadas en cube_storage, que es lo que usa RAPID.
+# ─────────────────────────────────────────────
+WOBJ1_X = -705.0   # mm
+WOBJ1_Y =   35.0   # mm
+
+# variable camara ordenador (1) o externa (0)
+camara = 0
+
+# ─────────────────────────────────────────────
 #  VARIABLE GLOBAL DE MODO DE CAPTURA
 #  True  → usa la cámara (índice 1)
 #  False → usa la imagen estática images/escenario1.jpg
 # ─────────────────────────────────────────────
-USAR_CAMARA = False
+USAR_CAMARA = True
 
 # ─────────────────────────────────────────────
 #  VARIABLE GLOBAL DE CONEXIÓN AL ROBOT
 #  True  → conecta al robot por TCP/IP (uso en laboratorio)
 #  False → modo offline, sin socket (pruebas desde casa)
 # ─────────────────────────────────────────────
-CONECTAR_ROBOT = False
+CONECTAR_ROBOT = True
 
 if CONECTAR_ROBOT:
     mi_socket = socket.socket()
-    mi_socket.connect(("192.168.1.89", 1025))
+    #mi_socket.connect(("192.168.1.89", 1025))
+    mi_socket.connect(("192.168.125.1", 1025))
     respuesta = mi_socket.recv(1024)
     print(respuesta)
     mi_socket.sendall('Server connected'.encode())
@@ -88,9 +100,11 @@ def dibujar(mask, color, min_area=3000):
             cv2.drawContours(frame, [nuevoContorno], 0, color, 3)
 
             if H_global is not None:
-                x_mm, y_mm = pixel_a_mm(x, y, H_global)
+                x_global, y_global = pixel_a_mm(x, y, H_global)
+                x_mm = x_global - WOBJ1_X
+                y_mm = y_global - WOBJ1_Y
                 coordXY = formatear_coordenadas(x_mm, y_mm)
-                label = f'{x},{y}px -> {x_mm:.0f},{y_mm:.0f}mm'
+                label = f'{x},{y}px -> {x_mm:.0f},{y_mm:.0f}mm (cube_storage)'
             else:
                 coordXY = f"{x:03d}{y:03d}"
                 label = f'{x},{y}px (sin calib)'
@@ -110,7 +124,7 @@ def dibujar(mask, color, min_area=3000):
 IMAGEN_ESTATICA = BASE_DIR / "images" / "escenario1.jpg"
 
 if USAR_CAMARA:
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(camara)
     # Set desired frame size for camera
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)

@@ -16,8 +16,10 @@ CÓMO USAR:
   7. Pulsa 'q' o ESC para salir.
 
 FRAME DE REFERENCIA:
-  Todas las coordenadas en ROBOT_PTS deben estar en el frame de Workobject_1,
-  NO en wobj0. Si tienes las coordenadas en wobj0, réstales [329.172, 70.377] mm.
+  Todas las coordenadas en ROBOT_PTS deben estar en el frame GLOBAL (wobj0).
+  En RobotStudio: selecciona wobj0 como frame activo al hacer jog y anota X, Y.
+  La conversión a cube_storage la hace ClienteGoFa_imagen.py automáticamente
+  restando el origen de cube_storage en wobj0: x=-705, y=35.
 """
 
 import cv2
@@ -28,30 +30,18 @@ from pathlib import Path
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  CONFIGURACIÓN: rellena ROBOT_PTS con las coordenadas de cada marca física
-#  en el frame de Workobject_1 (x_mm, y_mm), medidas con cinta métrica.
-#
-#  Ejemplo: si el área de trabajo mide 300 mm (X) × 400 mm (Y) y el origen
-#  de Workobject_1 está en la esquina inferior-izquierda de la mesa:
-#
-#  ROBOT_PTS = [
-#      (  0.0,   0.0),   # esquina inferior-izquierda
-#      (300.0,   0.0),   # esquina inferior-derecha
-#      (300.0, 400.0),   # esquina superior-derecha
-#      (  0.0, 400.0),   # esquina superior-izquierda
-#      (150.0, 200.0),   # centro
-#      (  0.0, 200.0),   # mitad borde izquierdo
-#      (150.0,   0.0),   # mitad borde inferior
-#      (300.0, 200.0),   # mitad borde derecho
-#  ]
+#  en el frame GLOBAL (wobj0), leídas en RobotStudio con wobj0 activo.
 #
 #  IMPORTANTE: necesitas al menos 4 puntos, no colineales (no todos en la
-#  misma línea). Se recomienda 6-8 puntos para mayor precisión.
+#  misma línea). Se recomienda 6 puntos para mayor precisión.
 # ─────────────────────────────────────────────────────────────────────────────
 ROBOT_PTS = [
-    (   0.0,    0.0),   # esquina 1: arriba-izquierda de la imagen
-    (2000.0,    0.0),   # esquina 2: abajo-izquierda de la imagen
-    (2000.0, 1200.0),   # esquina 3: abajo-derecha de la imagen
-    (   0.0, 1200.0),   # esquina 4: arriba-derecha de la imagen
+    ( 977.91,  211.70),   # punto 1
+    ( 799.23,  206.03),   # punto 2
+    ( 806.62,  479.68),   # punto 3
+    ( 911.53,  375.33),   # punto 4
+    (   899.34,    459.24),   # punto 5 — rellenar con jog en laboratorio
+    (   789.45,    395.48),   # punto 6 — rellenar con jog en laboratorio
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -62,7 +52,7 @@ ROBOT_PTS = [
 USAR_CAMARA = False
 
 BASE_DIR = Path(__file__).parent
-IMAGEN_ESTATICA = BASE_DIR / "images" / "escenario1.jpg"
+IMAGEN_ESTATICA = BASE_DIR / "images" / "escenario1_coins.jpg"
 OUTPUT_FILE = BASE_DIR / "homography.json"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -75,12 +65,22 @@ modo_verificacion = False
 
 def calcular_homografia(pix_pts, rob_pts):
     """
-    Calcula la homografía H con RANSAC.
-    Devuelve (H, rms_mm) o (None, inf) si falla.
+    Calcula la transformación píxel→mm.
+    - 2-3 puntos: similitud (escala + rotación + traslación), válida si la cámara
+      está razonablemente perpendicular a la mesa.
+    - 4+ puntos: homografía completa con RANSAC (corrige perspectiva).
+    Devuelve (H 3×3, rms_mm) o (None, inf) si falla.
     """
     src = np.array(pix_pts, dtype=np.float32)
     dst = np.array(rob_pts, dtype=np.float32)
-    H, mask = cv2.findHomography(src, dst, cv2.RANSAC, ransacReprojThreshold=8.0)
+
+    if len(pix_pts) < 4:
+        M, _ = cv2.estimateAffinePartial2D(src, dst)
+        if M is None:
+            return None, float("inf")
+        H = np.vstack([M, [0.0, 0.0, 1.0]])
+    else:
+        H, mask = cv2.findHomography(src, dst, cv2.RANSAC, ransacReprojThreshold=8.0)
     if H is None:
         return None, float("inf")
 
@@ -99,7 +99,7 @@ def guardar_json(H, pix_pts, rob_pts, ruta):
         "H": H.tolist(),
         "pixel_pts": [[int(p[0]), int(p[1])] for p in pix_pts],
         "robot_pts": [[float(r[0]), float(r[1])] for r in rob_pts],
-        "frame_referencia": "Workobject_1",
+        "frame_referencia": "wobj0",
         "fecha": datetime.now().isoformat(),
     }
     with open(ruta, "w", encoding="utf-8") as f:
@@ -224,8 +224,8 @@ def main():
             print("[RESET] Puntos reiniciados.")
 
         elif key == ord('c'):
-            if len(pixel_pts) < 4:
-                print(f"[AVISO] Se necesitan al menos 4 puntos. "
+            if len(pixel_pts) < 2:
+                print(f"[AVISO] Se necesitan al menos 2 puntos. "
                       f"Tienes {len(pixel_pts)}.")
             elif len(pixel_pts) < len(ROBOT_PTS):
                 print(f"[AVISO] Solo tienes {len(pixel_pts)} de {len(ROBOT_PTS)} "
