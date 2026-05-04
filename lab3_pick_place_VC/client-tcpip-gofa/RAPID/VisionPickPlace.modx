@@ -22,7 +22,8 @@ MODULE VisionPickPlace
     VAR num cambioStrX;
     VAR num cambioStrY;
     VAR string XValorString;
-    VAR string YValorString;    
+    VAR string YValorString;
+    VAR num i;  ! HMI: contador de bucle para piecesToPick
     VAR string client_ip := "192.168.125.1"; !Set the IP of the WAN port of the real robot 192.168,0.91
     !Process' variables
     CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
@@ -40,7 +41,9 @@ MODULE VisionPickPlace
         SocketSend clientSocket \Str:="GoFa connected succesfully";
         SocketReceive clientSocket \Str:= data;
         Reset Local_IO_0_DO1;
-        
+        robotBusy := FALSE;      ! HMI: estado inicial libre al arrancar
+        piecesPickedCount := 0;  ! HMI: contador a cero al arrancar
+
         WHILE keep_listening DO
             SocketReceive clientSocket \Str:= data;
             
@@ -52,9 +55,27 @@ MODULE VisionPickPlace
             
             ptoCamara.trans.x := cambioStrX; !Actualizamos coordenada X
             ptoCamara.trans.y := cambioStrY; !Actualizamos coordenada y
-            
-            recogerPieza;
-            
+
+            IF startPick = TRUE THEN           ! HMI: ejecutar solo si el operario pulso INICIAR
+                startPick := FALSE;            ! HMI: resetear flag para evitar rearranque automatico
+                robotBusy := TRUE;             ! HMI: notificar al FlexPendant que el robot esta ocupado
+                SocketSend clientSocket \Str:=StrConcat("C",NumToStr(selectedColor,0));  ! HMI: enviar color seleccionado a Python
+                FOR i FROM 1 TO piecesToPick DO  ! HMI: repetir para la cantidad pedida desde HMI
+                    recogerPieza;
+                    piecesPickedCount := piecesPickedCount + 1;  ! HMI: incrementar contador de piezas
+                    IF i < piecesToPick THEN    ! HMI: para pieza 2..n, esperar coords nuevas de la camara
+                        SocketReceive clientSocket \Str:= data;
+                        XValorString := StrPart(data,1,3);
+                        okX := StrToVal(XValorString,cambioStrX);
+                        YValorString := StrPart(data,4,3);
+                        okY := StrToVal(YValorString,cambioStrY);
+                        ptoCamara.trans.x := cambioStrX;  ! coordenadas actualizadas para siguiente pieza
+                        ptoCamara.trans.y := cambioStrY;
+                    ENDIF
+                ENDFOR
+                robotBusy := FALSE;            ! HMI: notificar al FlexPendant que el robot esta libre
+            ENDIF
+
         ENDWHILE
         SocketClose clientSocket;
         SocketClose serverSocket;
@@ -84,10 +105,10 @@ MODULE VisionPickPlace
         ConfJ\Off;
         ConfL\Off;
         ! AVISO Z: ptoCamara hereda la Z de ptoAux (Z=100 mm en wobj0).
-        ! Python solo envía X e Y; la Z NO se actualiza desde la cámara.
+        ! Python solo envia X e Y; la Z NO se actualiza desde la camara.
         ! Si el robot no alcanza el cubo o se queda corto, ajusta ptoAux.trans.z
         ! en RobotStudio hasta que el TCP toque la superficie del cubo.
-        ! Referencia: ptoPick.trans.z = 56 mm (posición de depósito sobre la mesa).
+        ! Referencia: ptoPick.trans.z = 56 mm (posicion de deposito sobre la mesa).
         MoveJ ptoReposo,v1000,z100,Magnet\WObj:=wobj0;
         MoveJ Offs(ptoCamara,0,0,100),v800,z10,Magnet\WObj:=wobj0;
         MoveL ptoCamara,v100,fine,Magnet\WObj:=wobj0;

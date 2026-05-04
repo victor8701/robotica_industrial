@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import socket
+import select
 import time
 from pathlib import Path
 import json
@@ -38,6 +39,28 @@ def formatear_coordenadas(x_mm, y_mm):
     x = max(0, min(999, int(round(x_mm))))
     y = max(0, min(999, int(round(y_mm))))
     return f"{x:03d}{y:03d}"
+
+# Color seleccionado por el HMI (1=amarillo, 2=azul, 3=rojo)
+# RAPID envia "C{n}" por TCP cuando el operario pulsa INICIAR
+selected_color_global = 1
+COLOR_NOMBRES = {1: "Amarillo", 2: "Azul", 3: "Rojo"}
+
+def leer_color_desde_rapid():
+    """Lee el color enviado por RAPID ('C1'/'C2'/'C3') sin bloquear."""
+    global selected_color_global
+    if mi_socket is None:
+        return
+    try:
+        readable, _, _ = select.select([mi_socket], [], [], 0)
+        if readable:
+            data = mi_socket.recv(8).decode(errors="ignore").strip()
+            if data.startswith("C") and len(data) >= 2 and data[1].isdigit():
+                nuevo = int(data[1])
+                if nuevo in (1, 2, 3):
+                    selected_color_global = nuevo
+                    print(f"[HMI] Color recibido: {COLOR_NOMBRES[selected_color_global]}")
+    except Exception as e:
+        print(f"[HMI] Error leyendo color: {e}")
 
 # variable camara ordenador (1) o externa (0)
 camara = 0
@@ -164,9 +187,18 @@ while True:
         maskRed1 = cv2.inRange(frameHSV, redBajo1, redAlto1)
         maskRed2 = cv2.inRange(frameHSV, redBajo2, redAlto2)
         maskRed = cv2.add(maskRed1, maskRed2)
-        # dibujar(maskAzul, (255, 0, 0))
-        dibujar(maskAmarillo, (0, 255, 255), min_area=min_area_amarillo)
-        # dibujar(maskRed, (0, 0, 255))
+
+        leer_color_desde_rapid()
+
+        if selected_color_global == 1:
+            dibujar(maskAmarillo, (0, 255, 255), min_area=min_area_amarillo)
+        elif selected_color_global == 2:
+            dibujar(maskAzul, (255, 0, 0))
+        elif selected_color_global == 3:
+            dibujar(maskRed, (0, 0, 255))
+
+        cv2.putText(frame, f"Buscando: {COLOR_NOMBRES[selected_color_global]}",
+                    (10, 25), font, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('s'):
             if mi_socket:

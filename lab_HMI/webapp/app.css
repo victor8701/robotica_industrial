@@ -1,0 +1,163 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* ── CABECERA ─────────────────────────────── */
+.header {
+    background: #ff000f;
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.status-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85em;
+}
+
+.status-label { opacity: 0.85; }
+
+.status-idle {
+    background: #22c55e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+.status-busy {
+    background: #f97316;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.85em;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+}
+
+/* ── CONTENIDO PRINCIPAL ─────────────────── */
+.main {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section {
+    background: white;
+    border-radius: 8px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.section h2 {
+    margin: 0 0 12px 0;
+    font-size: 0.78em;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ── BOTONES DE COLOR ────────────────────── */
+.color-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.color-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 6px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85em;
+    color: #444;
+    transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.color-btn:active { transform: scale(0.97); }
+
+#btn-yellow.selected { border-color: #ca8a04; border-width: 3px; background: #fef9c3; box-shadow: 0 0 0 3px rgba(234,179,8,0.35); }
+#btn-blue.selected   { border-color: #2563eb; border-width: 3px; background: #dbeafe; box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
+#btn-red.selected    { border-color: #dc2626; border-width: 3px; background: #fee2e2; box-shadow: 0 0 0 3px rgba(239,68,68,0.35); }
+
+.color-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+
+.yellow-circle { background: #eab308; }
+.blue-circle   { background: #3b82f6; }
+.red-circle    { background: #ef4444; }
+
+/* ── CANTIDAD ────────────────────────────── */
+.quantity-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.qty-display {
+    font-size: 2.2em;
+    font-weight: bold;
+    min-width: 56px;
+    text-align: center;
+    color: #222;
+}
+
+/* ── ESTADÍSTICAS ────────────────────────── */
+.stats {
+    display: flex;
+    gap: 10px;
+}
+
+.stat-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px;
+    background: #f8f8f8;
+    border-radius: 6px;
+}
+
+.stat-label {
+    font-size: 0.72em;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.stat-value {
+    font-size: 1.7em;
+    font-weight: bold;
+    color: #222;
+}

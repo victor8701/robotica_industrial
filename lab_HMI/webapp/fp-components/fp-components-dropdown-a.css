@@ -1,0 +1,156 @@
+/*
+
+
+OmniCore App SDK 1.6.0
+
+
+
+Copyright (c) 2020-2026 ABB
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use, copy, modify,
+merge, publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+The manuals related to the Software and the information therein are not
+included in these permissions and must not be reproduced, distributed,
+copied, or disclosed to third parties without ABB's written permission.
+ABB reserves all rights regarding Intellectual Property Rights in such
+manuals and information therein. 
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+*/
+
+
+
+
+.fp-components-dropdown-container {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.fp-components-dropdown {
+    /* position: relative; */
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    color: black;
+    background-color: var(--fp-color-WHITE);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--fp-color-GRAY-20);
+    border-radius: 5px;
+    padding-top: 7px;
+    padding-bottom: 6px;
+    padding-left: 14px;
+    padding-right: 14px;
+    font-size: 14px;
+}
+
+.fp-components-dropdown.fp-components-dropdown-disabled {
+    color: var(--fp-color-TEXT-BLACK-DISABLED);
+    background-color: var(--fp-color-BLACK-OPACITY-4);
+    border-color: rgba(0,0,0,0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fp-components-dropdown:not(.fp-components-dropdown-disabled):hover {
+        border-color: var(--fp-color-GRAY-30);
+    }
+}
+
+.fp-components-dropdown:not(.fp-components-dropdown-disabled):active {
+    border-color: var(--fp-color-GRAY-60);
+}
+
+.fp-components-dropdown-selected-truncate-left {
+    unicode-bidi: bidi-override;
+    direction: rtl;
+    text-align: left;
+}
+
+.fp-components-dropdown > p {
+    padding-right: 8px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.fp-components-dropdown > canvas {
+    margin-right: 0;
+    margin-left: auto;
+}
+
+.fp-components-dropdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2147480050;
+    background-color: rgba(255, 255, 255, 0.6);
+    width: 100vw;
+    height: 100vh;
+}
+
+.fp-components-dropdown-menu {
+    position: fixed;
+    box-sizing: border-box;
+    z-index: 2147480050;
+    background-color: var(--fp-color-WHITE);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: var(--fp-color-GRAY-30);
+    max-width: calc(100vw - 60px);
+    min-height: 42px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    /* padding-right: 17px; */
+    /* box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.2); */
+}
+
+.fp-components-dropdown-menu > p {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-left: 16px;
+    padding-right: 14px;
+    margin: 0px; 
+    /* margin: 4px;  */
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fp-components-dropdown-menu > p:hover {
+        background-color: var(--fp-color-GRAY-10);
+    }
+}
+
+.fp-components-dropdown-menu > p:active {
+    background-color: var(--fp-color-GRAY-20);
+}
+
+.fp-components-dropdown-desc {
+    margin-bottom: 4px;
+    margin-left: 2px;
+    display: block;
+    font-size: 14px;
+    line-height: 20px;
+}

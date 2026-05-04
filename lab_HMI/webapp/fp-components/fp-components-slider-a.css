@@ -1,0 +1,217 @@
+/*
+
+
+OmniCore App SDK 1.6.0
+
+
+
+Copyright (c) 2020-2026 ABB
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use, copy, modify,
+merge, publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+The manuals related to the Software and the information therein are not
+included in these permissions and must not be reproduced, distributed,
+copied, or disclosed to third parties without ABB's written permission.
+ABB reserves all rights regarding Intellectual Property Rights in such
+manuals and information therein. 
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+*/
+
+
+
+
+.fp-components-slider {
+     
+    background-color: initial;
+    height: auto;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    padding-top: 7px;
+    padding-bottom: 8px;
+    padding-left: 14px;
+    padding-right: 14px;
+    overflow: hidden;
+    touch-action: none;
+}
+
+ /* Container for the top labels */
+.fp-components-slider__labels-wrapper{
+    height: 37px;
+    width: auto;
+    display: flex;
+    position: relative;
+}
+
+.fp-components-slider__labels-wrapper span{
+    font: 14px Segoe UI Semibold;
+    color: var(--fp-color-PRIMARY-TEXT);
+}
+
+.fp-components-slider__label{
+    margin-top: 4px;
+}
+
+.fp-components-slider__label--hidden{
+    display: none;
+}
+
+.fp-components-slider__value{
+    height: 16px;
+    padding: 3px 0px;
+    color: var(--fp-color-PRIMARY-TEXT);
+    background-color: white;
+    border-color: var(--fp-color-BLUE-60);
+    border-style: solid;
+    border-width: 1px;
+    text-align: center;
+    position: absolute;
+    transform: translate(-50%, 0);
+ }
+
+@media (hover: hover) and (pointer: fine) {
+    .fp-components-slider__value--hover{
+        border-color: var(--fp-color-GRAY-30);
+    }
+}
+
+ .fp-components-slider__value--active{
+    border-color: var(--fp-color-BLUE-60);
+}
+
+ .fp-components-slider__value--hidden{
+    display: none;
+}
+
+
+/* Container for range elements */
+
+.fp-components-slider__range-wrapper {
+    
+    position: relative;
+    height: 16px;
+    width: 2px;
+    background-position-x: -1px;
+    background-image: linear-gradient(to right, lightgray 2px, transparent 2px);    
+}
+
+.fp-components-slider-last_tick {
+    position: relative;
+    height: 16px;
+    background-image: linear-gradient(to right, lightgray 2px, transparent 2px);    
+}
+
+.fp-components-slider__track {
+    height: 4px;
+    background-color:var(--fp-color-GRAY-20);
+    top: 50%;
+    position: absolute;
+    transform: translate(0%, -50%);
+    pointer-events: none;
+ }
+
+ .fp-components-slider__track--active {
+    background-color: var(--fp-color-BLUE-60);
+    pointer-events: inherit;
+ }
+
+ .fp-components-slider__track--disabled {
+    background-color: var(--fp-color-GRAY-40);
+    pointer-events: inherit;
+ }
+
+ .fp-components-slider__track-touchbox {
+    width: 24px;
+    height: 24px;
+    top: 50%;
+    position: relative;
+    transform: translate(-50%, -50%);
+ }
+
+ .fp-components-slider__track-handle {
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-width: 2px;
+    border-radius: 7px;
+    border-style: solid;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+ }
+
+ .fp-components-slider__track-handle--enabled {
+    color: var(--fp-color-BLUE-60);
+ }
+
+ .fp-components-slider__track-handle--disabled {
+    color: var(--fp-color-GRAY-40);
+ }
+
+.fp-components-slider__track-handle--active {
+    background-color: var(--fp-color-BLUE-60);
+ }
+
+ .fp-components-slider__tick{
+    width: 2px;
+    height: 16px;
+    position: absolute;
+    background-color: var(--fp-color-GRAY-20);
+    transform: translate(-50%, -50%);
+    top:50%;
+    pointer-events: none;
+}
+
+.fp-components-slider__tick--selected{
+    background-color:var(--fp-color-BLUE-60);
+}
+
+.fp-components-slider__tick--disabled {
+    background-color: var(--fp-color-GRAY-40);
+    pointer-events: inherit;
+ }
+
+/* Container for bottom elements */
+
+.fp-components-slider__minmax-wrapper{
+    display: flex;
+    justify-content: space-between;
+    margin: auto;
+    width: 100%;
+    height: 20px;
+}
+
+.fp-components-slider__minmax-label{
+    font: 12px Segoe UI Semibold;
+    color: var(--fp-color-PRIMARY-TEXT);
+}
+
+.fp-components-slider__minmax-label--left{
+    text-align: left;
+ }
+
+ .fp-components-slider__minmax-spacer{
+    flex: auto;
+  }
+
+ .fp-components-slider__minmax-label--right{
+    text-align: right;
+}
