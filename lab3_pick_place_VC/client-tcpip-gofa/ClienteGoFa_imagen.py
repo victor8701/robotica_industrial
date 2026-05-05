@@ -7,8 +7,23 @@ from pathlib import Path
 import json
 
 BASE_DIR = Path(__file__).parent
-CONFIG_FILE = BASE_DIR / "config_cubos_amarillos.json"
 HOMOGRAPHY_FILE = BASE_DIR / "homography.json"
+
+COLOR_CONFIG_FILES = {
+    1: BASE_DIR / "config_cubos_amarillos.json",
+    2: BASE_DIR / "config_cubos_azules.json",
+    3: BASE_DIR / "config_cubos_rojos.json",
+}
+COLOR_BGR = {1: (0, 255, 255), 2: (255, 0, 0), 3: (0, 0, 255)}
+COLOR_DEFAULTS = {
+    1: {"hsv_lower_h": 20,  "hsv_lower_s": 150, "hsv_lower_v": 150,
+        "hsv_upper_h": 30,  "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 3000},
+    2: {"hsv_lower_h": 100, "hsv_lower_s": 100, "hsv_lower_v": 20,
+        "hsv_upper_h": 125, "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 3000},
+    3: {"hsv_lower_h": 0,   "hsv_lower_s": 100, "hsv_lower_v": 20,
+        "hsv_upper_h": 5,   "hsv_upper_s": 255, "hsv_upper_v": 255,
+        "hsv_lower_h2": 175, "hsv_upper_h2": 179, "min_area": 3000},
+}
 
 
 # ─────────────────────────────────────────────
@@ -39,6 +54,26 @@ def formatear_coordenadas(x_mm, y_mm):
     x = max(0, min(999, int(round(x_mm))))
     y = max(0, min(999, int(round(y_mm))))
     return f"{x:03d}{y:03d}"
+
+
+def _cfg_color(color_id):
+    ruta = COLOR_CONFIG_FILES[color_id]
+    if Path(ruta).is_file():
+        with open(ruta, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return COLOR_DEFAULTS[color_id]
+
+def calcular_mask(frameHSV, cfg):
+    lo = np.array([cfg["hsv_lower_h"], cfg["hsv_lower_s"], cfg["hsv_lower_v"]], np.uint8)
+    hi = np.array([cfg["hsv_upper_h"], cfg["hsv_upper_s"], cfg["hsv_upper_v"]], np.uint8)
+    mask = cv2.inRange(frameHSV, lo, hi)
+    if "hsv_lower_h2" in cfg:
+        lo2 = np.array([cfg["hsv_lower_h2"], cfg["hsv_lower_s"], cfg["hsv_lower_v"]], np.uint8)
+        hi2 = np.array([cfg["hsv_upper_h2"], cfg["hsv_upper_s"], cfg["hsv_upper_v"]], np.uint8)
+        mask = cv2.add(mask, cv2.inRange(frameHSV, lo2, hi2))
+    return mask
+
+color_configs = {cid: _cfg_color(cid) for cid in (1, 2, 3)}
 
 # Color seleccionado por el HMI (1=amarillo, 2=azul, 3=rojo)
 # RAPID envia "C{n}" por TCP cuando el operario pulsa INICIAR
@@ -150,26 +185,6 @@ else:
     # Resize static image to match expected processing size
     img_estatica = cv2.resize(img_estatica, (640, 480))
 
-azulBajo = np.array([100, 100, 20], np.uint8)
-azulAlto = np.array([125, 255, 255], np.uint8)
-
-# Cargar parámetros de cubos amarillos si existe el config
-if CONFIG_FILE.is_file():
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-    amarilloBajo = np.array([cfg.get("hsv_lower_h", 20), cfg.get("hsv_lower_s", 150), cfg.get("hsv_lower_v", 150)], np.uint8)
-    amarilloAlto = np.array([cfg.get("hsv_upper_h", 30), cfg.get("hsv_upper_s", 255), cfg.get("hsv_upper_v", 255)], np.uint8)
-    min_area_amarillo = cfg.get("min_area", 500)
-else:
-    amarilloBajo = np.array([20, 150, 150], np.uint8)
-    amarilloAlto = np.array([30, 255, 255], np.uint8)
-    min_area_amarillo = 3000
-
-redBajo1 = np.array([0, 100, 20], np.uint8)
-redAlto1 = np.array([5, 255, 255], np.uint8)
-redBajo2 = np.array([175, 100, 20], np.uint8)
-redAlto2 = np.array([179, 255, 255], np.uint8)
-
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 while True:
@@ -182,20 +197,12 @@ while True:
 
     if ret:
         frameHSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        maskAzul = cv2.inRange(frameHSV, azulBajo, azulAlto)
-        maskAmarillo = cv2.inRange(frameHSV, amarilloBajo, amarilloAlto)
-        maskRed1 = cv2.inRange(frameHSV, redBajo1, redAlto1)
-        maskRed2 = cv2.inRange(frameHSV, redBajo2, redAlto2)
-        maskRed = cv2.add(maskRed1, maskRed2)
 
         leer_color_desde_rapid()
 
-        if selected_color_global == 1:
-            dibujar(maskAmarillo, (0, 255, 255), min_area=min_area_amarillo)
-        elif selected_color_global == 2:
-            dibujar(maskAzul, (255, 0, 0))
-        elif selected_color_global == 3:
-            dibujar(maskRed, (0, 0, 255))
+        cfg_activo = color_configs[selected_color_global]
+        mask = calcular_mask(frameHSV, cfg_activo)
+        dibujar(mask, COLOR_BGR[selected_color_global], min_area=cfg_activo.get("min_area", 3000))
 
         cv2.putText(frame, f"Buscando: {COLOR_NOMBRES[selected_color_global]}",
                     (10, 25), font, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
