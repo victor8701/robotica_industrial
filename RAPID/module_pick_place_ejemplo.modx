@@ -1,0 +1,70 @@
+MODULE Module1
+    PERS tooldata Pen:=[TRUE,[[170.754,0.18,190.741],[0.653281482,-0.27059805,0.27059805,-0.653281482]],[0.25,[0,0,65],[1,0,0,0],0,0,0]];
+    PERS tooldata Magnet:=[TRUE,[[-120.55,-0.18,140.537],[0.653281482,0.27059805,-0.27059805,-0.653281482]],[0.25,[0,0,65],[1,0,0,0],0,0,0]];
+    TASK PERS wobjdata cube_storage:=[FALSE,TRUE,"",[[-142.5,327.5,0],[1,0,0,0]],[[200,200,1],[0,0,1,0]]];
+    
+    ! replace 45 with 40 on the real robot!!!
+    CONST robtarget Target_10:=[[160,160,-45],[1,0,0,0],[1,0,1,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget Target_20:=[[-496.698866583,0,-45],[1,0,0,0],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget Target_30:=[[325.047760827,598.528518969,509.172880363],[0.170317354,-0.827334505,-0.411182315,-0.342693333],[0,1,0,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    
+    CONST num side:=40;
+    CONST num sep:=160;
+    
+    CONST num rows:=3;
+    CONST num cols:=3;
+    
+    VAR num stacked:=0;
+    
+    VAR bool row1_done:=FALSE;
+    VAR bool row2_done:=FALSE;
+    VAR bool row3_done:=FALSE;
+    
+    PROC main()
+        MoveJ Target_30,v200,z50,tool0\WObj:=wobj0;
+        Reset Local_IO_0_DO1;
+        
+        ConfJ\Off;
+        ConfL\Off;
+        
+        WHILE (NOT row1_done) OR (NOT row2_done) OR (NOT row3_done) DO
+            WaitUntil (Local_IO_0_DI1=1 AND row1_done=FALSE) OR
+                      (Local_IO_0_DI2=1 AND row2_done=FALSE) OR
+                      (Local_IO_0_DI3=1 AND row3_done=FALSE);
+            
+            IF (Local_IO_0_DI1=1 AND row1_done=FALSE) THEN
+                doRow 0;
+                row1_done:=TRUE;
+            ELSEIF (Local_IO_0_DI2=1 AND row2_done=FALSE) THEN
+                doRow 1;
+                row2_done:=TRUE;
+            ELSEIF (Local_IO_0_DI3=1 AND row3_done=FALSE) THEN
+                doRow 2;
+                row3_done:=TRUE;
+            ENDIF
+        ENDWHILE
+        
+        ConfJ\On;
+        ConfL\On;
+        
+        MoveJ Target_30,v200,z50,tool0\WObj:=wobj0;
+    ENDPROC
+    
+    PROC doRow(num row)
+        FOR col FROM 0 TO cols-1 DO
+            MoveJ Offs(Target_10,-sep*col,-sep*row,-100),v200,z10,Magnet\WObj:=cube_storage;
+            MoveL Offs(Target_10,-sep*col,-sep*row,0),v50,fine,Magnet\WObj:=cube_storage;
+            WaitTime 1;
+            Set Local_IO_0_DO1;
+            WaitTime 1;
+            MoveL Offs(Target_10,-sep*col,-sep*row,-100),v50,z10,Magnet\WObj:=cube_storage;
+            MoveJ Offs(Target_20,0,0,-100-(stacked*side)),v200,z10,Magnet\WObj:=cube_storage;
+            MoveL Offs(Target_20,0,0,-stacked*side),v50,fine,Magnet\WObj:=cube_storage;
+            WaitTime 1;
+            Reset Local_IO_0_DO1;
+            WaitTime 1;
+            MoveL Offs(Target_20,0,0,-100-(stacked*side)),v50,z10,Magnet\WObj:=cube_storage;
+            stacked:=stacked+1;
+        ENDFOR
+    ENDPROC
+ENDMODULE

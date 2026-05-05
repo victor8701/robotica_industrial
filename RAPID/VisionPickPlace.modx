@@ -32,6 +32,7 @@ MODULE VisionPickPlace
     VAR robtarget ptoCamara;
 
     VAR num cube_height := 33.14;
+    CONST num side := 40;
 
     PROC main()
         !Add your code here ****************************************************
@@ -108,21 +109,16 @@ MODULE VisionPickPlace
     PROC recogerPieza()
         ConfJ\Off;
         ConfL\Off;
-        ! AVISO Z: ptoCamara hereda la Z de ptoAux (Z=100 mm en wobj0).
-        ! Python solo envia X e Y; la Z NO se actualiza desde la camara.
-        ! Si el robot no alcanza el cubo o se queda corto, ajusta ptoAux.trans.z
-        ! en RobotStudio hasta que el TCP toque la superficie del cubo.
-        ! Referencia: ptoPick.trans.z = 56 mm (posicion de deposito sobre la mesa).
         MoveJ ptoReposo,v1000,z100,Magnet\WObj:=wobj0;
         MoveJ Offs(ptoCamara,0,0,100),v800,z10,Magnet\WObj:=wobj0;
         MoveL ptoCamara,v100,fine,Magnet\WObj:=wobj0;
         Set Local_IO_0_DO1;
         MoveJ Offs(ptoCamara,0,0,100),v400,z10,Magnet\WObj:=wobj0;
         MoveJ ptoReposo,v800,z100,Magnet\WObj:=wobj0;
-        MoveJ Offs(ptoPick,0,0,100),v800,z10,Magnet\WObj:=wobj0;
-        MoveL ptoPick,v100,fine,Magnet\WObj:=wobj0;
+        MoveJ Offs(ptoPick,0,0,100+piecesPickedCount*side),v800,z10,Magnet\WObj:=wobj0;
+        MoveL Offs(ptoPick,0,0,piecesPickedCount*side),v100,fine,Magnet\WObj:=wobj0;
         Reset Local_IO_0_DO1;
-        MoveJ Offs(ptoPick,0,0,50),v400,z10,Magnet\WObj:=wobj0;
+        MoveJ Offs(ptoPick,0,0,100+piecesPickedCount*side),v400,z10,Magnet\WObj:=wobj0;
     ENDPROC
     
 ENDMODULE
