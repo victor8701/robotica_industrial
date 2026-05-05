@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 # ─── SELECCIONA EL COLOR A CALIBRAR ───────────────────────────────────────────
-COLOR = "amarillo"   # "amarillo" | "azul" | "rojo"
+COLOR = "azul"   # "amarillo" | "azul" | "rojo"
 # ──────────────────────────────────────────────────────────────────────────────
 
 BASE_DIR = Path(__file__).parent
@@ -53,6 +53,9 @@ if es_rojo:
     cv2.createTrackbar("H Min2", "Controles", params.get("hsv_lower_h2", 175), 179, lambda x: None)
     cv2.createTrackbar("H Max2", "Controles", params.get("hsv_upper_h2", 179), 179, lambda x: None)
 
+COLOR_BGR_MAP = {"amarillo": (0, 255, 255), "azul": (255, 0, 0), "rojo": (0, 0, 255)}
+color_bgr = COLOR_BGR_MAP[COLOR]
+
 print(f"=== Calibracion de cubos {COLOR} ===")
 print("Ajusta los sliders y pulsa 's' para guardar, 'q'/ESC para salir.")
 
@@ -77,7 +80,17 @@ while True:
 
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     vis = img.copy()
-    cv2.drawContours(vis, [c for c in contours if cv2.contourArea(c) >= min_area], -1, (0, 255, 255), 2)
+    overlay = vis.copy()
+    for c in contours:
+        if cv2.contourArea(c) >= min_area:
+            hull = cv2.convexHull(c)
+            cv2.fillPoly(overlay, [hull], color_bgr)
+            cv2.drawContours(vis, [hull], 0, color_bgr, 2)
+            M = cv2.moments(c)
+            if M["m00"] > 0:
+                cx, cy = int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])
+                cv2.circle(vis, (cx, cy), 7, color_bgr, -1)
+    cv2.addWeighted(overlay, 0.35, vis, 0.65, 0, vis)
 
     cv2.imshow("Deteccion", vis)
     cv2.imshow("Mascara", mask)

@@ -11,8 +11,8 @@ HOMOGRAPHY_FILE = BASE_DIR / "homography.json"
 
 COLOR_CONFIG_FILES = {
     1: BASE_DIR / "config_cubos_amarillos.json",
-    2: BASE_DIR / "config_cubos_azules.json",
-    3: BASE_DIR / "config_cubos_rojos.json",
+    2: BASE_DIR / "config_cubos_azul.json",
+    3: BASE_DIR / "config_cubos_rojo.json",
 }
 COLOR_BGR = {1: (0, 255, 255), 2: (255, 0, 0), 3: (0, 0, 255)}
 COLOR_DEFAULTS = {
@@ -116,8 +116,8 @@ CONECTAR_ROBOT = True
 
 if CONECTAR_ROBOT:
     mi_socket = socket.socket()
-    #mi_socket.connect(("192.168.1.89", 1025))
     mi_socket.connect(("192.168.125.1", 1025))
+    #mi_socket.connect(("127.0.0.1", 1025)) #para prueba sin robot con mock_robot.py
     respuesta = mi_socket.recv(1024)
     print(respuesta)
     mi_socket.sendall('Server connected'.encode())
