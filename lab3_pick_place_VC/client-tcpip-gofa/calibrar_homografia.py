@@ -36,12 +36,12 @@ from pathlib import Path
 #  misma línea). Se recomienda 6 puntos para mayor precisión.
 # ─────────────────────────────────────────────────────────────────────────────
 ROBOT_PTS = [
-    ( 977.91,  211.70),   # punto 1
-    ( 799.23,  206.03),   # punto 2
-    ( 806.62,  479.68),   # punto 3
-    ( 911.53,  375.33),   # punto 4
-    (   899.34,    459.24),   # punto 5 — rellenar con jog en laboratorio
-    (   789.45,    395.48),   # punto 6 — rellenar con jog en laboratorio
+    ( 962.39,  225.96),   # punto 1
+    ( 741.32,  223.13),   # punto 2
+    ( 718.63,  408.32),   # punto 3
+    ( 899.91,  454.02),   # punto 4
+    (   851.5,272.88),   # punto 5 — rellenar con jog en laboratorio
+    (   786.91,319.71),   # punto 6 — rellenar con jog en laboratorio
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────

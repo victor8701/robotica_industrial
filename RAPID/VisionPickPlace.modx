@@ -28,11 +28,14 @@ MODULE VisionPickPlace
     !Process' variables
     CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     CONST robtarget ptoPick:=[[190.152964329,689.995892332,56.318084196],[-0.00000001,0.000000013,1,-0.000000005],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
-    CONST robtarget ptoAux:=[[204.950713217,341.660605837,100],[0.000000114,0.000000004,1,0.000000036],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
-    VAR robtarget ptoCamara := ptoAux;
-    
+    PERS robtarget ptoAux:=[[204.950713217,341.660605837,100],[0.000000114,0.000000004,1,0.000000036],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    VAR robtarget ptoCamara;
+
+    VAR num cube_height := 33.14;
+
     PROC main()
         !Add your code here ****************************************************
+        ptoCamara := ptoAux;
         SocketCreate serverSocket; !Create a temp_socket
         SocketBind serverSocket, client_ip, 1025;
         SocketListen serverSocket;
@@ -53,13 +56,14 @@ MODULE VisionPickPlace
             YValorString := StrPart(data,4,3);
             okY:=StrToVal(YValorString,cambioStrY);
             
-            ptoCamara.trans.x := cambioStrX; !Actualizamos coordenada X
-            ptoCamara.trans.y := cambioStrY; !Actualizamos coordenada y
+            ptoCamara.trans.x := cambioStrX;
+            ptoCamara.trans.y := cambioStrY;
+            ptoCamara.trans.z := cube_height;
 
             IF startPick = TRUE THEN           ! HMI: ejecutar solo si el operario pulso INICIAR
                 startPick := FALSE;            ! HMI: resetear flag para evitar rearranque automatico
                 robotBusy := TRUE;             ! HMI: notificar al FlexPendant que el robot esta ocupado
-                SocketSend clientSocket \Str:=StrConcat("C",NumToStr(selectedColor,0));  ! HMI: enviar color seleccionado a Python
+                SocketSend clientSocket \Str:="C" + NumToStr(selectedColor,0);  ! HMI: enviar color seleccionado a Python
                 FOR i FROM 1 TO piecesToPick DO  ! HMI: repetir para la cantidad pedida desde HMI
                     recogerPieza;
                     piecesPickedCount := piecesPickedCount + 1;  ! HMI: incrementar contador de piezas
