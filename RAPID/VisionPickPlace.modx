@@ -27,15 +27,19 @@ MODULE VisionPickPlace
     VAR string client_ip := "192.168.125.1"; !Set the IP of the WAN port of the real robot 192.168,0.91
     !Process' variables
     CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
-    CONST robtarget ptoPick:=[[190.152964329,689.995892332,56.318084196],[-0.00000001,0.000000013,1,-0.000000005],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget ptoPick:=[[-101.42,686.62,56.318084196],[-0.00000001,0.000000013,1,-0.000000005],[1,0,1,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     PERS robtarget ptoAux:=[[204.950713217,341.660605837,100],[0.000000114,0.000000004,1,0.000000036],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     VAR robtarget ptoCamara;
 
     VAR num cube_height := 33.14;
-    CONST num side := 40;
 
     PROC main()
         !Add your code here ****************************************************
+
+        MoveJ ptoReposo, v200, fine, Magnet\WObj:=wobj0;
+        ConfJ\Off;
+        ConfL\Off;
+        
         ptoCamara := ptoAux;
         SocketCreate serverSocket; !Create a temp_socket
         SocketBind serverSocket, client_ip, 1025;
@@ -107,18 +111,31 @@ MODULE VisionPickPlace
     ENDPROC
     
     PROC recogerPieza()
+        VAR num xOffset;
         ConfJ\Off;
         ConfL\Off;
-        MoveJ ptoReposo,v1000,z100,Magnet\WObj:=wobj0;
-        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Magnet\WObj:=wobj0;
-        MoveL ptoCamara,v100,fine,Magnet\WObj:=wobj0;
-        Set Local_IO_0_DO1;
-        MoveJ Offs(ptoCamara,0,0,100),v400,z10,Magnet\WObj:=wobj0;
-        MoveJ ptoReposo,v800,z100,Magnet\WObj:=wobj0;
-        MoveJ Offs(ptoPick,0,0,100+piecesPickedCount*side),v800,z10,Magnet\WObj:=wobj0;
-        MoveL Offs(ptoPick,0,0,piecesPickedCount*side),v100,fine,Magnet\WObj:=wobj0;
-        Reset Local_IO_0_DO1;
-        MoveJ Offs(ptoPick,0,0,100+piecesPickedCount*side),v400,z10,Magnet\WObj:=wobj0;
+        
+        ! Calcular incremento en X (160mm por pieza)
+        xOffset := piecesPickedCount * 160;
+        
+        ! Aproximacion a la pieza 
+        MoveJ Offs(ptoCamara,0,0,100),v200,z10,Magnet\WObj:=wobj0;
+        MoveL ptoCamara,v50,fine,Magnet\WObj:=wobj0;
+        Set Local_IO_0_DO1;  ! Activar electroimán
+        
+        ! Subida despues de agarrar
+        MoveJ Offs(ptoCamara,0,0,100),v200,z10,Magnet\WObj:=wobj0;
+        
+        ! Ir a DEJAR en fila india (añadiendo xOffset a la coordenada X)
+        MoveJ Offs(ptoPick,xOffset,0,100),v200,z10,Magnet\WObj:=wobj0;
+        MoveL Offs(ptoPick,xOffset,0,0),v50,fine,Magnet\WObj:=wobj0;
+        Reset Local_IO_0_DO1; ! Desactivar electroimán
+        
+        ! Subir ligeramente dejando el cubo en la mesa
+        MoveJ Offs(ptoPick,xOffset,0,50),v200,z10,Magnet\WObj:=wobj0;
+        
+        ! Ir a reposo final
+        MoveJ ptoReposo,v200,z100,Magnet\WObj:=wobj0;
     ENDPROC
-    
+
 ENDMODULE
