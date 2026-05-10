@@ -5,16 +5,18 @@ import os
 from pathlib import Path
 
 # ─── SELECCIONA EL COLOR A CALIBRAR ───────────────────────────────────────────
-COLOR = "azul"   # "amarillo" | "azul" | "rojo"
+COLOR = "rojo"   # "verde" | "amarillo" | "azul" | "rojo"
 # ──────────────────────────────────────────────────────────────────────────────
 
 BASE_DIR = Path(__file__).parent
-IMAGE_PATH = BASE_DIR / "images" / "escenario1.jpg"
+IMAGE_PATH = BASE_DIR / "images" / "escenario3.jpg"
 CONFIG_FILE = BASE_DIR / f"config_cubos_{COLOR}.json"
 
 DEFAULTS = {
     "amarillo": {"hsv_lower_h": 20,  "hsv_lower_s": 150, "hsv_lower_v": 150,
                  "hsv_upper_h": 30,  "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 500},
+    "verde":    {"hsv_lower_h": 35,  "hsv_lower_s": 50,  "hsv_lower_v": 20,
+                 "hsv_upper_h": 85,  "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 800},
     "azul":     {"hsv_lower_h": 100, "hsv_lower_s": 100, "hsv_lower_v": 20,
                  "hsv_upper_h": 125, "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 3000},
     "rojo":     {"hsv_lower_h": 0,   "hsv_lower_s": 100, "hsv_lower_v": 20,
@@ -53,7 +55,7 @@ if es_rojo:
     cv2.createTrackbar("H Min2", "Controles", params.get("hsv_lower_h2", 175), 179, lambda x: None)
     cv2.createTrackbar("H Max2", "Controles", params.get("hsv_upper_h2", 179), 179, lambda x: None)
 
-COLOR_BGR_MAP = {"amarillo": (0, 255, 255), "azul": (255, 0, 0), "rojo": (0, 0, 255)}
+COLOR_BGR_MAP = {"amarillo": (0, 255, 255), "azul": (255, 0, 0), "rojo": (0, 0, 255), "verde": (0, 255, 0)}
 color_bgr = COLOR_BGR_MAP[COLOR]
 
 print(f"=== Calibracion de cubos {COLOR} ===")

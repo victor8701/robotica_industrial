@@ -36,10 +36,10 @@ from pathlib import Path
 #  misma línea). Se recomienda 6 puntos para mayor precisión.
 # ─────────────────────────────────────────────────────────────────────────────
 ROBOT_PTS = [
-    ( 962.39,  225.96),   # punto 1
-    ( 741.32,  223.13),   # punto 2
-    ( 718.63,  408.32),   # punto 3
-    ( 899.91,  454.02),   # punto 4
+    ( 771.87,374.62),   # punto 1
+    ( 933.01,384.52),   # punto 2
+    ( 969.47,142.27),   # punto 3
+    ( 756.39,67.13),   # punto 4
     (   851.5,272.88),   # punto 5 — rellenar con jog en laboratorio
     (   786.91,319.71),   # punto 6 — rellenar con jog en laboratorio
 ]
@@ -49,7 +49,7 @@ ROBOT_PTS = [
 #  USAR_CAMARA = False → imagen estática (para calibrar desde casa)
 #  USAR_CAMARA = True  → cámara en vivo (recomendado en laboratorio)
 # ─────────────────────────────────────────────────────────────────────────────
-USAR_CAMARA = False
+USAR_CAMARA = True
 
 BASE_DIR = Path(__file__).parent
 IMAGEN_ESTATICA = BASE_DIR / "images" / "escenario1_coins.jpg"
@@ -174,7 +174,7 @@ def main():
 
     # Fuente de imagen
     if USAR_CAMARA:
-        cap = cv2.VideoCapture(1)
+        cap = cv2.VideoCapture(2)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         ret, img_base = cap.read()

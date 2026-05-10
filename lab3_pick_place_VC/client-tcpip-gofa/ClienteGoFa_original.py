@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import socket
 import time
+import json
 mi_socket = socket.socket()
-mi_socket.connect(("192.168.1.89" , 1025))
+mi_socket.connect(("192.168.125.1" , 1025))
 respuesta = mi_socket.recv(1024)
 print(respuesta)
 mi_socket.sendall('Server connected'.encode())
@@ -13,35 +14,50 @@ def dibujar(mask,color):
       cv2.CHAIN_APPROX_SIMPLE)
   for c in contornos:
     area = cv2.contourArea(c)
-    if area > 3000:
+    if area > 2000:
       M = cv2.moments(c)
       if (M["m00"]==0): M["m00"]=1
       x = int(M["m10"]/M["m00"])
       y = int(M['m01']/M['m00'])
+      
+      # Convertir píxeles a milímetros reales usando la calibración
+      pt = np.array([[[x, y]]], dtype=np.float32)
+      res = cv2.perspectiveTransform(pt, H_global)[0][0]
+      x_mm, y_mm = float(res[0]), float(res[1])
+      
+      # Ignorar la zona de la izquierda (donde el robot deja los cubos)
+      if x_mm < 500:
+          continue
+          
       nuevoContorno = cv2.convexHull(c)
       cv2.circle(frame,(x,y),7,(0,255,0),-1)
-      cv2.putText(frame,'{},{}'.format(x,y),(x+10,y), font, 0.75,(0,255,0),1,cv2.LINE_AA)
+      
+      # Formatear a XXXYYY
+      x_str = str(max(0, min(999, int(round(x_mm))))).zfill(3)
+      y_str = str(max(0, min(999, int(round(y_mm))))).zfill(3)
+      
+      label = f'{x_str},{y_str}mm'
+      cv2.putText(frame,label,(x+10,y), font, 0.65,(0,255,0),1,cv2.LINE_AA)
+      
       cv2.drawContours(frame, [nuevoContorno], 0, color, 3)
-      coorX = ''
-      coorY = ''
-      if x < 100: coorX = '0'+str(x)
-      else: coorX = str(x)
-      if y < 100: coorY = '0'+str(y)
-      else: coorY = str(y)
-      coordXY = coorX+coorY
+      
+      coordXY = x_str + y_str
       mi_socket.sendall(coordXY.encode())
       time.sleep(1)
-      print("Coordenadas: " + coordXY)
+      print("Coordenadas enviadas: " + coordXY)
 
-cap = cv2.VideoCapture(1)
-azulBajo = np.array([100,100,20],np.uint8)
-azulAlto = np.array([125,255,255],np.uint8)
-amarilloBajo = np.array([15,100,20],np.uint8)
-amarilloAlto = np.array([45,255,255],np.uint8)
-redBajo1 = np.array([0,100,20],np.uint8)
-redAlto1 = np.array([5,255,255],np.uint8)
-redBajo2 = np.array([175,100,20],np.uint8)
-redAlto2 = np.array([179,255,255],np.uint8)
+with open("homography.json", "r", encoding="utf-8") as f:
+    H_global = np.array(json.load(f)["H"], dtype=np.float64)
+
+cap = cv2.VideoCapture(2)
+azulBajo = np.array([90, 120, 80],np.uint8)
+azulAlto = np.array([130, 255, 255],np.uint8)
+amarilloBajo = np.array([20, 120, 80],np.uint8)
+amarilloAlto = np.array([40, 255, 255],np.uint8)
+redBajo1 = np.array([0, 120, 80],np.uint8)
+redAlto1 = np.array([8, 255, 255],np.uint8)
+redBajo2 = np.array([170, 120, 80],np.uint8)
+redAlto2 = np.array([179, 255, 255],np.uint8)
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 

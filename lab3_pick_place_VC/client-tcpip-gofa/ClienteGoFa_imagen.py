@@ -98,7 +98,7 @@ def leer_color_desde_rapid():
         print(f"[HMI] Error leyendo color: {e}")
 
 # variable camara ordenador (1) o externa (0)
-camara = 0
+camara = 2
 
 # ─────────────────────────────────────────────
 #  VARIABLE GLOBAL DE MODO DE CAPTURA
@@ -151,6 +151,12 @@ def dibujar(mask, color, min_area=3000):
 
             if H_global is not None:
                 x_mm, y_mm = pixel_a_mm(x, y, H_global)
+                
+                # FILTRO ESPACIAL: Ignorar zona de deposito (cubos de la izquierda)
+                # El ptoPick tiene X=190. La zona de recogida tiene X>700.
+                if x_mm < 500:
+                    continue 
+
                 coordXY = formatear_coordenadas(x_mm, y_mm)
                 label = f'{x},{y}px -> {x_mm:.0f},{y_mm:.0f}mm (wobj0)'
             else:
