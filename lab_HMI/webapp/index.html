@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
-    <title>Pick &amp; Place HMI</title>
-
+    <title>Pick & Place HMI - GoFa</title>
     <link rel="stylesheet" type="text/css" href="fp-components/fp-components-common.css">
-    <link rel="stylesheet" type="text/css" href="fp-components/fp-components-button-a.css">
-    <link rel="stylesheet" type="text/css" href="fp-components/fp-components-popup-a.css">
     <link rel="stylesheet" type="text/css" href="fp-components/fp-components-switch-a.css">
-    <link rel="stylesheet" type="text/css" href="fp-components/fp-components-digital-a.css">
     <link rel="stylesheet" type="text/css" href="app.css">
 
     <script src="fp-components/fp-components-common.js"></script>
     <script src="fp-components/fp-components-button-a.js"></script>
-    <script src="fp-components/fp-components-popup-a.js"></script>
     <script src="fp-components/fp-components-switch-a.js"></script>
     <script src="fp-components/fp-components-digital-a.js"></script>
+    <script src="fp-components/fp-components-popup-a.js"></script>
+    <script src="fp-components/fp-components-input-a.js"></script>
 
     <script src="rws-api/omnicore-rws.js"></script>
     <script src="rws-api/omnicore-app.js"></script>
@@ -23,76 +21,54 @@
 </head>
 
 <body>
-
-    <!-- CABECERA -->
     <div class="hmi-header">
-        <span class="hmi-title">Pick &amp; Place HMI</span>
+        <span class="hmi-title">Pick & Place HMI</span>
         <div class="hmi-status-box">
             <span>Robot:</span>
             <div id="status-indicator" class="status-idle">LIBRE</div>
         </div>
     </div>
 
-    <!-- SECCIÓN 1: Selección de pieza -->
     <div class="hmi-section">
-        <p class="hmi-section-title">Selección de pieza</p>
+        <p class="hmi-section-title">1. Selección de Pieza</p>
         <div class="color-row">
-            <button id="btn-yellow" class="color-btn" onclick="selectColor(1)">
-                <div class="color-dot" style="background:#eab308"></div>
-                Amarillo
+            <button id="btn-green" class="color-btn">
+                <div class="color-dot" style="background:#22c55e"></div> Verde
             </button>
-            <button id="btn-blue" class="color-btn" onclick="selectColor(2)">
-                <div class="color-dot" style="background:#3b82f6"></div>
-                Azul
+            <button id="btn-blue" class="color-btn">
+                <div class="color-dot" style="background:#3b82f6"></div> Azul
             </button>
-            <button id="btn-red" class="color-btn" onclick="selectColor(3)">
-                <div class="color-dot" style="background:#ef4444"></div>
-                Rojo
+            <button id="btn-red" class="color-btn">
+                <div class="color-dot" style="background:#ef4444"></div> Rojo
             </button>
         </div>
     </div>
 
-    <!-- SECCIÓN 2: Cantidad -->
-    <div class="hmi-section">
-        <p class="hmi-section-title">Cantidad</p>
-        <div class="qty-row">
-            <div id="btn-dec"></div>
-            <span id="qty-label" class="qty-label">1</span>
-            <div id="btn-inc"></div>
+    <div class="hmi-section hmi-stats-row">
+        <div class="stat-box">
+            <span class="stat-label">Meta de Piezas</span>
+            <div class="qty-row">
+                <div id="btn-dec"></div>
+                <span id="qty-label" class="qty-label">1</span>
+                <div id="btn-inc"></div>
+            </div>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">Recogidas (Progreso)</span>
+            <span id="piece-count" class="stat-value">0</span>
         </div>
     </div>
 
-    <!-- SECCIÓN 3: Iniciar -->
     <div class="hmi-section">
         <div id="btn-start"></div>
     </div>
 
-    <!-- SECCIÓN 4: Estado y contador -->
-    <div class="hmi-section hmi-stats-row">
-        <div class="stat-box">
-            <span class="stat-label">Piezas recogidas</span>
-            <span id="piece-count" class="stat-value">0</span>
-        </div>
-        <div class="stat-box">
-            <span class="stat-label">Imán (DO1)</span>
-            <div id="led-magnet"></div>
-        </div>
-    </div>
-
-    <!-- SECCIÓN 5: Control I/O manual -->
     <div class="hmi-section">
-        <p class="hmi-section-title">Control I/O manual</p>
-        <div class="io-row">
-            <div class="io-item">
-                <span class="io-label">DO1 – Imán</span>
-                <div id="switchDO1"></div>
-            </div>
-            <div class="io-item">
-                <span class="io-label">DO2</span>
-                <div id="switchDO2"></div>
-            </div>
+        <p class="hmi-section-title">Control Imán (DO1)</p>
+        <div class="center-content">
+            <div id="switchDO1"></div>
         </div>
     </div>
-
 </body>
+
 </html>

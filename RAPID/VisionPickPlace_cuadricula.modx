@@ -1,0 +1,132 @@
+MODULE VisionPickPlace
+    !************************************************************
+
+    VAR socketdev serverSocket;
+    VAR socketdev clientSocket;
+    VAR string data;
+    VAR bool keep_listening := TRUE;
+    VAR bool okX;
+    VAR bool okY;
+    VAR num cambioStrX;
+    VAR num cambioStrY;
+    VAR string XValorString;
+    VAR string YValorString;
+    VAR num i;
+    VAR string client_ip := "192.168.125.1";
+
+    ! Posicion de reposo
+    CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+
+    ! Posicion auxiliar inicial para ptoCamara
+    PERS robtarget ptoAux:=[[204.950713217,341.660605837,100],[0.000000114,0.000000004,1,0.000000036],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    VAR robtarget ptoCamara;
+    VAR num cube_height := 33.14;
+
+    ! Cuadricula de entrega 
+    TASK PERS wobjdata cube_storage:=[FALSE,TRUE,"",[[-142.5,327.5,0],[1,0,0,0]],[[200,200,1],[0,0,1,0]]];
+    CONST robtarget Target_10:=[[160,160,-45],[1,0,0,0],[1,0,1,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    PERS num sepX  := 160;  ! Separacion entre columnas (mm)
+    PERS num sepY  := 160;  ! Separacion entre filas (mm)
+    CONST num cols := 3;
+
+    PROC main()
+        MoveJ ptoReposo, v200, fine, Magnet\WObj:=wobj0;
+        ConfJ\Off;
+        ConfL\Off;
+
+        ptoCamara := ptoAux;
+        SocketCreate serverSocket;
+        SocketBind serverSocket, client_ip, 1025;
+        SocketListen serverSocket;
+        SocketAccept serverSocket, clientSocket, \Time:=WAIT_MAX;
+        SocketSend clientSocket \Str:="GoFa connected succesfully";
+        SocketReceive clientSocket \Str:= data;
+        Reset Local_IO_0_DO1;
+        robotBusy        := FALSE;
+        piecesPickedCount := 0;
+
+        WHILE keep_listening DO
+            SocketReceive clientSocket \Str:= data;
+
+            XValorString := StrPart(data,1,3);
+            okX := StrToVal(XValorString, cambioStrX);
+            YValorString := StrPart(data,4,3);
+            okY := StrToVal(YValorString, cambioStrY);
+
+            ptoCamara.trans.x := cambioStrX;
+            ptoCamara.trans.y := cambioStrY;
+            ptoCamara.trans.z := cube_height;
+
+            IF startPick = TRUE THEN
+                startPick  := FALSE;
+                robotBusy  := TRUE;
+                SocketSend clientSocket \Str:="C" + NumToStr(selectedColor,0);
+                FOR i FROM 1 TO piecesToPick DO
+                    recogerPieza;
+                    piecesPickedCount := piecesPickedCount + 1;
+                    IF i < piecesToPick THEN
+                        SocketReceive clientSocket \Str:= data;
+                        XValorString := StrPart(data,1,3);
+                        okX := StrToVal(XValorString, cambioStrX);
+                        YValorString := StrPart(data,4,3);
+                        okY := StrToVal(YValorString, cambioStrY);
+                        ptoCamara.trans.x := cambioStrX;
+                        ptoCamara.trans.y := cambioStrY;
+                    ENDIF
+                ENDFOR
+                robotBusy := FALSE;
+            ENDIF
+
+        ENDWHILE
+        SocketClose clientSocket;
+        SocketClose serverSocket;
+
+        ERROR
+            IF ERRNO=ERR_SOCK_TIMEOUT THEN
+                RETRY;
+            ELSEIF ERRNO=ERR_SOCK_CLOSED THEN
+                SocketClose clientSocket;
+                SocketClose serverSocket;
+                SocketCreate serverSocket;
+                SocketBind serverSocket, client_ip, 1025;
+                SocketListen serverSocket;
+                SocketAccept serverSocket, clientSocket;
+                SocketSend clientSocket \Str:="GoFa Reconnected";
+                SocketReceive clientSocket \Str:= data;
+                data := "";
+                RETRY;
+            ELSE
+                TPWrite "ERRNO = "\Num:=ERRNO;
+                Stop;
+            ENDIF
+    ENDPROC
+
+    PROC recogerPieza()
+        VAR num col;
+        VAR num row;
+        ConfJ\Off;
+        ConfL\Off;
+
+        ! Posicion en la cuadricula a partir del contador de piezas
+        col := piecesPickedCount Mod cols;
+        row := (piecesPickedCount - col) / cols;
+
+        ! Recoger cubo de la camara
+        MoveJ Offs(ptoCamara,0,0,100), v200, z10,  Magnet\WObj:=wobj0;
+        MoveL ptoCamara,               v50,  fine,  Magnet\WObj:=wobj0;
+        Set Local_IO_0_DO1;
+        MoveJ Offs(ptoCamara,0,0,100), v200, z10,  Magnet\WObj:=wobj0;
+
+        ! Transito seguro por ptoReposo
+        MoveJ ptoReposo, v200, z100, Magnet\WObj:=wobj0;
+
+        ! Entregar en la celda (col, row) de la cuadricula
+        MoveJ Offs(Target_10,-sepX*col,-sepY*row,-100), v200, z10,  Magnet\WObj:=cube_storage;
+        MoveL Offs(Target_10,-sepX*col,-sepY*row,   0), v50,  fine, Magnet\WObj:=cube_storage;
+        Reset Local_IO_0_DO1;
+        MoveJ Offs(Target_10,-sepX*col,-sepY*row,-100), v200, z10,  Magnet\WObj:=cube_storage;
+
+        MoveJ ptoReposo, v200, z100, Magnet\WObj:=wobj0;
+    ENDPROC
+
+ENDMODULE

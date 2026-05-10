@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 # ─── SELECCIONA EL COLOR A CALIBRAR ───────────────────────────────────────────
-COLOR = "rojo"   # "verde" | "amarillo" | "azul" | "rojo"
+COLOR = "amarillo"   # "verde" | "amarillo" | "azul" | "rojo"
 # ──────────────────────────────────────────────────────────────────────────────
 
 BASE_DIR = Path(__file__).parent

@@ -10,11 +10,12 @@ BASE_DIR = Path(__file__).parent
 HOMOGRAPHY_FILE = BASE_DIR / "homography.json"
 
 COLOR_CONFIG_FILES = {
-    1: BASE_DIR / "config_cubos_amarillos.json",
+    1: BASE_DIR / "config_cubos_amarillo.json",
     2: BASE_DIR / "config_cubos_azul.json",
     3: BASE_DIR / "config_cubos_rojo.json",
+    4: BASE_DIR / "config_cubos_verde.json",
 }
-COLOR_BGR = {1: (0, 255, 255), 2: (255, 0, 0), 3: (0, 0, 255)}
+COLOR_BGR = {1: (0, 255, 255), 2: (255, 0, 0), 3: (0, 0, 255), 4: (0, 200, 0)}
 COLOR_DEFAULTS = {
     1: {"hsv_lower_h": 20,  "hsv_lower_s": 150, "hsv_lower_v": 150,
         "hsv_upper_h": 30,  "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 3000},
@@ -23,6 +24,8 @@ COLOR_DEFAULTS = {
     3: {"hsv_lower_h": 0,   "hsv_lower_s": 100, "hsv_lower_v": 20,
         "hsv_upper_h": 5,   "hsv_upper_s": 255, "hsv_upper_v": 255,
         "hsv_lower_h2": 175, "hsv_upper_h2": 179, "min_area": 3000},
+    4: {"hsv_lower_h": 40,  "hsv_lower_s": 80,  "hsv_lower_v": 80,
+        "hsv_upper_h": 80,  "hsv_upper_s": 255, "hsv_upper_v": 255, "min_area": 3000},
 }
 
 
@@ -73,12 +76,12 @@ def calcular_mask(frameHSV, cfg):
         mask = cv2.add(mask, cv2.inRange(frameHSV, lo2, hi2))
     return mask
 
-color_configs = {cid: _cfg_color(cid) for cid in (1, 2, 3)}
+color_configs = {cid: _cfg_color(cid) for cid in (1, 2, 3, 4)}
 
-# Color seleccionado por el HMI (1=amarillo, 2=azul, 3=rojo)
+# Color seleccionado por el HMI (1=amarillo, 2=azul, 3=rojo, 4=verde)
 # RAPID envia "C{n}" por TCP cuando el operario pulsa INICIAR
-selected_color_global = 1
-COLOR_NOMBRES = {1: "Amarillo", 2: "Azul", 3: "Rojo"}
+selected_color_global = 4
+COLOR_NOMBRES = {1: "Amarillo", 2: "Azul", 3: "Rojo", 4: "Verde"}
 
 def leer_color_desde_rapid():
     """Lee el color enviado por RAPID ('C1'/'C2'/'C3') sin bloquear."""
@@ -91,7 +94,7 @@ def leer_color_desde_rapid():
             data = mi_socket.recv(8).decode(errors="ignore").strip()
             if data.startswith("C") and len(data) >= 2 and data[1].isdigit():
                 nuevo = int(data[1])
-                if nuevo in (1, 2, 3):
+                if nuevo in (1, 2, 3, 4):
                     selected_color_global = nuevo
                     print(f"[HMI] Color recibido: {COLOR_NOMBRES[selected_color_global]}")
     except Exception as e:
@@ -116,8 +119,8 @@ CONECTAR_ROBOT = True
 
 if CONECTAR_ROBOT:
     mi_socket = socket.socket()
-    mi_socket.connect(("192.168.125.1", 1025))
-    #mi_socket.connect(("127.0.0.1", 1025)) #para prueba sin robot con mock_robot.py
+    #mi_socket.connect(("192.168.125.1", 1025))
+    mi_socket.connect(("127.0.0.1", 1025)) #para prueba sin robot con mock_robot.py
     respuesta = mi_socket.recv(1024)
     print(respuesta)
     mi_socket.sendall('Server connected'.encode())
@@ -178,7 +181,7 @@ def dibujar(mask, color, min_area=3000):
 IMAGEN_ESTATICA = BASE_DIR / "images" / "escenario1.jpg"
 
 if USAR_CAMARA:
-    cap = cv2.VideoCapture(camara)
+    cap = cv2.VideoCapture(camara, cv2.CAP_DSHOW)
     # Set desired frame size for camera
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)

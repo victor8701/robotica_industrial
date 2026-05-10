@@ -5,6 +5,7 @@ import time
 import json
 mi_socket = socket.socket()
 mi_socket.connect(("192.168.125.1" , 1025))
+#mi_socket.connect(("127.0.0.1" , 1025))
 respuesta = mi_socket.recv(1024)
 print(respuesta)
 mi_socket.sendall('Server connected'.encode())
@@ -20,7 +21,7 @@ def dibujar(mask,color):
       x = int(M["m10"]/M["m00"])
       y = int(M['m01']/M['m00'])
       
-      # Convertir píxeles a milímetros reales usando la calibración
+      # Convertir pixeles a milÃ­metros reales usando la calibracion
       pt = np.array([[[x, y]]], dtype=np.float32)
       res = cv2.perspectiveTransform(pt, H_global)[0][0]
       x_mm, y_mm = float(res[0]), float(res[1])
