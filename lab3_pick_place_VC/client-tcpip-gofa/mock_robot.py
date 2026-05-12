@@ -18,7 +18,6 @@ USO:
 
 import socket
 import threading
-import sys
 
 HOST = "127.0.0.1"
 PORT = 1025
@@ -59,7 +58,7 @@ def main():
     bienvenida = conn.recv(1024).decode(errors="ignore").strip()
     print(f"[mock] Python envio: {repr(bienvenida)}")
     print()
-    print("Comandos: C1=Amarillo  C2=Azul  C3=Rojo  q=salir")
+    print("Comandos: C1=Amarillo  C2=Azul  C3=Rojo  C4=Verde  q=salir")
     print("-" * 40)
 
     hilo = threading.Thread(target=recibir_loop, args=(conn,), daemon=True)
@@ -69,12 +68,12 @@ def main():
         cmd = input().strip()
         if cmd.lower() == "q":
             break
-        if cmd in ("C1", "C2", "C3"):
+        if cmd in ("C1", "C2", "C3", "C4"):
             conn.sendall(cmd.encode())
-            nombres = {"C1": "Amarillo", "C2": "Azul", "C3": "Rojo"}
+            nombres = {"C1": "Amarillo", "C2": "Azul", "C3": "Rojo", "C4": "Verde"}
             print(f"[mock] Enviado {cmd} ({nombres[cmd]})")
         else:
-            print("[mock] Comando no reconocido. Usa C1, C2, C3 o q.")
+            print("[mock] Comando no reconocido. Usa C1, C2, C3, C4 o q.")
 
     conn.close()
     srv.close()

@@ -15,6 +15,8 @@ MODULE VisionPickPlace
     VAR string client_ip := "192.168.125.1";
     VAR bool notificado := FALSE;
 
+    VAR bool usePLC := TRUE;
+
     ! Posicion de reposo
     CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
 
@@ -23,11 +25,11 @@ MODULE VisionPickPlace
     VAR robtarget ptoCamara;
     VAR num cube_height := 33.14;
 
-    ! Cuadricula de entrega 
+    ! Cuadricula de entrega
     TASK PERS wobjdata cube_storage:=[FALSE,TRUE,"",[[-142.5,327.5,0],[1,0,0,0]],[[200,200,1],[0,0,1,0]]];
     CONST robtarget Target_10:=[[160,160,-45],[1,0,0,0],[1,0,1,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
-    PERS num sepX  := 160;  ! Separacion entre columnas (mm)
-    PERS num sepY  := 160;  ! Separacion entre filas (mm)
+    PERS num sepX  := 160;
+    PERS num sepY  := 160;
     CONST num cols := 3;
 
     PROC main()
@@ -48,34 +50,50 @@ MODULE VisionPickPlace
         piecesPickedCount := 0;
 
         WHILE keep_listening DO
-            ! Esperar a que el operario pulse INICIAR en el HMI
-            WaitUntil startPick = TRUE \PollRate:=0.1;
-            startPick := FALSE;
-            robotBusy := TRUE;
 
-            FOR i FROM 1 TO piecesToPick DO
-                ! Pedir coordenada al cliente Python para el color seleccionado
-                SocketSend clientSocket \Str:="C" + NumToStr(selectedColor,0);
-                SocketReceive clientSocket \Str:= data;
+            IF usePLC THEN
+                ! ── MODO PLC ────────────────────────────────────────────
+                ! 1. Esperar a que task5 baje (evitar re-disparo del ciclo anterior)
+                WHILE task5 = 1 DO
+                    WaitTime 0.05;
+                ENDWHILE
+                ! 2. Esperar flanco ascendente en task5, leyendo datos mientras tanto
+                WHILE task5 = 0 DO
+                    UsingPLC;
+                    WaitTime 0.05;
+                ENDWHILE
+                ! 3. Lectura final en el momento exacto del flanco
+                UsingPLC;
 
-                XValorString := StrPart(data,1,3);
-                okX := StrToVal(XValorString, cambioStrX);
-                YValorString := StrPart(data,4,3);
-                okY := StrToVal(YValorString, cambioStrY);
+            ELSE
+                ! ── MODO HMI ────────────────────────────────────────────
+                WaitUntil startPick = TRUE \PollRate:=0.1;
+                startPick := FALSE;
+            ENDIF
 
-                ptoCamara.trans.x := cambioStrX;
-                ptoCamara.trans.y := cambioStrY;
-                ptoCamara.trans.z := cube_height;
+            IF piecesToPick > 0 AND selectedColor > 0 THEN
+                robotBusy := TRUE;
+                FOR i FROM 1 TO piecesToPick DO
+                    SocketSend clientSocket \Str:="C" + NumToStr(selectedColor, 0);
+                    SocketReceive clientSocket \Str:= data;
+                    XValorString := StrPart(data,1,3);
+                    okX := StrToVal(XValorString, cambioStrX);
+                    YValorString := StrPart(data,4,3);
+                    okY := StrToVal(YValorString, cambioStrY);
+                    ptoCamara.trans.x := cambioStrX;
+                    ptoCamara.trans.y := cambioStrY;
+                    ptoCamara.trans.z := cube_height;
+                    recogerPieza;
+                    piecesPickedCount := piecesPickedCount + 1;
+                ENDFOR
+                robotBusy := FALSE;
+            ENDIF
 
-                recogerPieza;
-                piecesPickedCount := piecesPickedCount + 1;
-            ENDFOR
-
-            robotBusy := FALSE;
             IF piecesPickedCount >= 9 AND notificado = FALSE THEN
                 SocketSend clientSocket \Str:="FIN";
                 notificado := TRUE;
             ENDIF
+
         ENDWHILE
         SocketClose clientSocket;
         SocketClose serverSocket;
@@ -100,26 +118,44 @@ MODULE VisionPickPlace
             ENDIF
     ENDPROC
 
+    PROC UsingPLC()
+        ! Bits 0-1: numero de piezas
+        IF task1=0 AND task0=0 THEN
+            piecesToPick := 0;
+        ELSEIF task1=0 AND task0=1 THEN
+            piecesToPick := 1;
+        ELSEIF task1=1 AND task0=0 THEN
+            piecesToPick := 2;
+        ELSEIF task1=1 AND task0=1 THEN
+            piecesToPick := 3;
+        ENDIF
+
+        ! Bits 2-4: color
+        IF task2=1 AND task3=0 AND task4=0 THEN
+            selectedColor := 3;  ! rojo
+        ELSEIF task2=0 AND task3=1 AND task4=0 THEN
+            selectedColor := 2;  ! azul
+        ELSEIF task2=0 AND task3=0 AND task4=1 THEN
+            selectedColor := 4;  ! verde
+        ENDIF
+    ENDPROC
+
     PROC recogerPieza()
         VAR num col;
         VAR num row;
         ConfJ\Off;
         ConfL\Off;
 
-        ! Posicion en la cuadricula a partir del contador de piezas
         col := piecesPickedCount Mod cols;
         row := (piecesPickedCount - col) / cols;
 
-        ! Recoger cubo de la camara
         MoveJ Offs(ptoCamara,0,0,100), v200, z10,  Magnet\WObj:=wobj0;
         MoveL ptoCamara,               v50,  fine,  Magnet\WObj:=wobj0;
         Set Local_IO_0_DO1;
         MoveJ Offs(ptoCamara,0,0,100), v200, z10,  Magnet\WObj:=wobj0;
 
-        ! Transito seguro por ptoReposo
         MoveJ ptoReposo, v200, z100, Magnet\WObj:=wobj0;
 
-        ! Entregar en la celda (col, row) de la cuadricula
         MoveJ Offs(Target_10,-sepX*col,-sepY*row,-100), v200, z10,  Magnet\WObj:=cube_storage;
         MoveL Offs(Target_10,-sepX*col,-sepY*row,   0), v50,  fine, Magnet\WObj:=cube_storage;
         Reset Local_IO_0_DO1;

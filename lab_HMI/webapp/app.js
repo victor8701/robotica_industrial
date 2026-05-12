@@ -108,6 +108,9 @@ async function createHMI() {
             rapidCount = await RWS.Rapid.getData(TASK, MODULE, "piecesPickedCount");
             rapidCount.addCallbackOnChanged(v => {
                 document.getElementById("piece-count").textContent = v;
+                if (parseInt(v) >= 9) {
+                    FPComponents.Popup_A.message("Mision completada", "Se han recogido 9 piezas con exito.");
+                }
             });
             await rapidCount.subscribe(true);
         } catch (e) { console.warn("rapidCount:", e); }

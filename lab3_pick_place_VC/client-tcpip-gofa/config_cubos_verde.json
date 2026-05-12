@@ -1,9 +1,9 @@
 {
-    "hsv_lower_h": 15,
-    "hsv_lower_s": 90,
-    "hsv_lower_v": 76,
-    "hsv_upper_h": 86,
-    "hsv_upper_s": 255,
-    "hsv_upper_v": 255,
-    "min_area": 306
+    "hsv_lower_h": 45,
+    "hsv_lower_s": 75,
+    "hsv_lower_v": 52,
+    "hsv_upper_h": 85,
+    "hsv_upper_s": 189,
+    "hsv_upper_v": 147,
+    "min_area": 442
 }
