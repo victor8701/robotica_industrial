@@ -13,6 +13,7 @@ MODULE VisionPickPlace
     VAR string YValorString;
     VAR num i;
     VAR string client_ip := "192.168.125.1";
+    VAR bool notificado := FALSE;
 
     ! Posicion de reposo
     CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
@@ -42,41 +43,39 @@ MODULE VisionPickPlace
         SocketSend clientSocket \Str:="GoFa connected succesfully";
         SocketReceive clientSocket \Str:= data;
         Reset Local_IO_0_DO1;
-        robotBusy        := FALSE;
+        startPick         := FALSE;
+        robotBusy         := FALSE;
         piecesPickedCount := 0;
 
         WHILE keep_listening DO
-            SocketReceive clientSocket \Str:= data;
+            ! Esperar a que el operario pulse INICIAR en el HMI
+            WaitUntil startPick = TRUE \PollRate:=0.1;
+            startPick := FALSE;
+            robotBusy := TRUE;
 
-            XValorString := StrPart(data,1,3);
-            okX := StrToVal(XValorString, cambioStrX);
-            YValorString := StrPart(data,4,3);
-            okY := StrToVal(YValorString, cambioStrY);
-
-            ptoCamara.trans.x := cambioStrX;
-            ptoCamara.trans.y := cambioStrY;
-            ptoCamara.trans.z := cube_height;
-
-            IF startPick = TRUE THEN
-                startPick  := FALSE;
-                robotBusy  := TRUE;
+            FOR i FROM 1 TO piecesToPick DO
+                ! Pedir coordenada al cliente Python para el color seleccionado
                 SocketSend clientSocket \Str:="C" + NumToStr(selectedColor,0);
-                FOR i FROM 1 TO piecesToPick DO
-                    recogerPieza;
-                    piecesPickedCount := piecesPickedCount + 1;
-                    IF i < piecesToPick THEN
-                        SocketReceive clientSocket \Str:= data;
-                        XValorString := StrPart(data,1,3);
-                        okX := StrToVal(XValorString, cambioStrX);
-                        YValorString := StrPart(data,4,3);
-                        okY := StrToVal(YValorString, cambioStrY);
-                        ptoCamara.trans.x := cambioStrX;
-                        ptoCamara.trans.y := cambioStrY;
-                    ENDIF
-                ENDFOR
-                robotBusy := FALSE;
-            ENDIF
+                SocketReceive clientSocket \Str:= data;
 
+                XValorString := StrPart(data,1,3);
+                okX := StrToVal(XValorString, cambioStrX);
+                YValorString := StrPart(data,4,3);
+                okY := StrToVal(YValorString, cambioStrY);
+
+                ptoCamara.trans.x := cambioStrX;
+                ptoCamara.trans.y := cambioStrY;
+                ptoCamara.trans.z := cube_height;
+
+                recogerPieza;
+                piecesPickedCount := piecesPickedCount + 1;
+            ENDFOR
+
+            robotBusy := FALSE;
+            IF piecesPickedCount >= 9 AND notificado = FALSE THEN
+                SocketSend clientSocket \Str:="FIN";
+                notificado := TRUE;
+            ENDIF
         ENDWHILE
         SocketClose clientSocket;
         SocketClose serverSocket;
