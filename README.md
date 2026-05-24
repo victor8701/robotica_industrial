@@ -7,6 +7,19 @@
 
 > Autonomous pick & place system integrating real-time computer vision, TCP/IP communication, a custom FlexPendant web HMI, and ABB RAPID robot programming — built on an ABB GoFa 10 collaborative robot.
 
+<p align="center">
+  <a href="https://youtu.be/iVWgJ_TqeYI">
+    <img src="https://img.youtube.com/vi/iVWgJ_TqeYI/maxresdefault.jpg" alt="Demo – HMI mode" width="48%"/>
+  </a>
+  &nbsp;
+  <a href="https://youtube.com/shorts/v5Kew_jn9Eo">
+    <img src="https://img.youtube.com/vi/v5Kew_jn9Eo/maxresdefault.jpg" alt="Demo – PLC mode" width="48%"/>
+  </a>
+</p>
+<p align="center">
+  <em>Left: HMI mode &nbsp;|&nbsp; Right: PLC mode &nbsp;— click to watch</em>
+</p>
+
 ---
 
 ## Features
@@ -211,15 +224,6 @@ python ClienteGoFa_imagen.py
 4. On the FlexPendant, select a color, set the quantity, and press **INICIAR RECOGIDA**
 
 > To test without the physical robot, use `mock_robot.py` as a TCP server simulator on `127.0.0.1:1025`.
-
----
-
-## Demo
-
-| Mode | Video |
-|---|---|
-| HMI mode | [![HMI Demo](https://img.youtube.com/vi/iVWgJ_TqeYI/maxresdefault.jpg)](https://youtu.be/iVWgJ_TqeYI) |
-| PLC mode | [![PLC Demo](https://img.youtube.com/vi/v5Kew_jn9Eo/maxresdefault.jpg)](https://youtube.com/shorts/v5Kew_jn9Eo) |
 
 ---
 
